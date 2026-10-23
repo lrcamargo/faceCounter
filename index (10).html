@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0ea5e9">
+<title>FaceCounter v2.4 - Camiseta Preta/Branca + 3,5m</title>
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b1220; --card:#121c33; --card2:#162345; --line:#22325e;
+    --accent:#0ea5e9; --accent2:#38bdf8; --green:#22c55e; --orange:#f59e0b; --text:#f1f5f9; --muted:#94a3b8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Inter,system-ui,sans-serif;background:radial-gradient(1200px 600px at 20% -10%, #0ea5e955 0%, transparent 60%), radial-gradient(1000px 500px at 90% 0%, #6366f155 0%, transparent 60%), var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);background:rgba(11,18,32,0.75);border-bottom:1px solid var(--line);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#0ea5e9,#6366f1);display:grid;place-items:center;box-shadow:0 8px 24px rgba(14,165,233,.35);font-size:20px}
+  .brand h1{font-size:18px;font-weight:800;letter-spacing:-.02em;line-height:1}
+  .brand p{font-size:12px;color:var(--muted);margin-top:2px}
+  .badge{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:#0ea5e916;border:1px solid #0ea5e930;color:var(--accent2);padding:6px 10px;border-radius:999px;white-space:nowrap}
+  .container{max-width:1240px;margin:0 auto;padding:18px 16px 28px;display:grid;gap:16px}
+  .grid{display:grid;grid-template-columns:1.45fr .9fr;gap:16px}
+  @media(max-width:900px){ .grid{grid-template-columns:1fr} }
+  .camera-card{background:linear-gradient(180deg,var(--card),#0f1b36);border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.35)}
+  .camera-top{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .camera-top h2{font-size:14px;letter-spacing:.02em;display:flex;align-items:center;gap:8px}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 6px rgba(34,197,94,.15);animation:pulse 1.6s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 6px rgba(34,197,94,.15)}50%{box-shadow:0 0 0 10px rgba(34,197,94,.08)}100%{box-shadow:0 0 0 6px rgba(34,197,94,.15)}}
+  .dot.off{background:#ef4444;box-shadow:0 0 0 6px rgba(239,68,68,.15);animation:none}
+  .dot.warn{background:#f59e0b;box-shadow:0 0 0 6px rgba(245,158,11,.15)}
+  .controls{display:flex;gap:8px;flex-wrap:wrap}
+  .btn{appearance:none;border:1px solid var(--line);background:#0c1a36;color:var(--text);padding:9px 14px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:.15s}
+  .btn:hover{transform:translateY(-1px);border-color:#2b3f77;background:#10204a}
+  .btn.primary{background:linear-gradient(135deg,#0ea5e9,#0284c7);border-color:#0284c7;box-shadow:0 8px 18px rgba(14,165,233,.3)}
+  .btn.ghost{background:transparent}
+  .btn:disabled{opacity:.45;pointer-events:none}
+  .stage{position:relative;background:#020617;aspect-ratio:16/10;overflow:hidden;display:grid;place-items:center}
+  @media(max-width:600px){ .stage{aspect-ratio:4/3} }
+  video, canvas.overlay{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  video{transform:scaleX(-1)} video.no-mirror{transform:none}
+  canvas.overlay{pointer-events:none}
+  .placeholder{position:relative;z-index:2;text-align:center;padding:32px 20px;max-width:440px}
+  .ph-icon{width:72px;height:72px;border-radius:20px;margin:0 auto 14px;background:linear-gradient(135deg,#1e293b,#0f172a);border:1px solid var(--line);display:grid;place-items:center;font-size:34px}
+  .placeholder h3{font-size:18px;margin-bottom:8px}
+  .placeholder p{font-size:13px;color:var(--muted);line-height:1.5}
+  .privacy{position:absolute;bottom:10px;left:10px;right:10px;z-index:3;display:flex;justify-content:space-between;align-items:center;gap:10px;background:rgba(2,6,23,.82);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:8px 10px;font-size:11px;color:#cbd5e1}
+  .privacy strong{color:#7dd3fc}
+  .stats{display:grid;gap:16px}
+  .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .kpi{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:18px;padding:14px;position:relative;overflow:hidden}
+  .kpi::after{content:"";position:absolute;right:-20px;top:-20px;width:90px;height:90px;background:radial-gradient(circle at center, rgba(14,165,233,.18), transparent 70%);pointer-events:none}
+  .kpi label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:6px}
+  .kpi strong{font-family:JetBrains Mono,monospace;font-size:32px;font-weight:800;letter-spacing:-.03em;display:block;margin-top:6px;line-height:1}
+  .kpi span{font-size:11px;color:var(--muted);margin-top:6px;display:block}
+  .kpi.total strong{color:var(--accent2)} .kpi.live strong{color:var(--green)}
+  .kpi.today{grid-column:span 2;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .kpi.today strong{font-size:22px}
+  .panel{background:linear-gradient(180deg,var(--card),#0f1c38);border:1px solid var(--line);border-radius:18px;padding:16px}
+  .panel h3{font-size:13px;letter-spacing:.02em;display:flex;align-items:center;gap:8px;margin-bottom:12px}
+  .row{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px dashed #1e2f5a;flex-wrap:wrap}
+  .row:last-child{border:0} .row b{font-size:13px} .row small{color:var(--muted);font-size:12px}
+  .switch{position:relative;width:44px;height:26px;background:#1e293b;border-radius:999px;border:1px solid #26365e;cursor:pointer;transition:.2s;flex-shrink:0}
+  .switch i{position:absolute;top:2px;left:2px;width:20px;height:20px;background:white;border-radius:50%;transition:.2s;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+  .switch.on{background:var(--accent);border-color:#0284c7} .switch.on i{transform:translateX(18px)}
+  .select{width:100%;background:#0b1733;border:1px solid #22325e;color:var(--text);border-radius:10px;padding:9px 10px;font-size:13px}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .mode-tabs{display:flex;background:#0b1733;border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
+  .mode-tab{flex:1;padding:9px 8px;border-radius:9px;border:1px solid transparent;background:transparent;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;text-align:center;transition:.15s}
+  .mode-tab.active{background:linear-gradient(135deg,#0ea5e9,#0284c7);color:white;border-color:#0284c7;box-shadow:0 4px 12px rgba(14,165,233,.25)}
+  .mode-tab small{display:block;font-weight:500;font-size:10px;opacity:.9;margin-top:2px}
+  .log{max-height:220px;overflow:auto;padding-right:4px}
+  .log::-webkit-scrollbar{width:6px} .log::-webkit-scrollbar-thumb{background:#22325e;border-radius:999px}
+  .entry{display:flex;align-items:center;gap:10px;background:#0a1430;border:1px solid #1a2950;border-radius:12px;padding:9px 10px;margin-bottom:8px;animation:slide .25s ease}
+  @keyframes slide{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .entry time{font-family:JetBrains Mono,monospace;font-size:11px;color:var(--muted);white-space:nowrap}
+  .entry p{font-size:12px;font-weight:600} .entry .pill{margin-left:auto;background:var(--green);color:#052e16;font-size:10px;font-weight:800;padding:3px 7px;border-radius:999px}
+  .help{background:linear-gradient(135deg,#0ea5e918,#6366f118);border:1px solid #0ea5e930;border-radius:18px;padding:16px}
+  .help h4{font-size:13px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+  .help ul{padding-left:18px;display:grid;gap:6px} .help li{font-size:12px;color:#cbd5e1;line-height:1.5} .help li b{color:white}
+  .footer-note{text-align:center;padding:8px;color:var(--muted);font-size:11px}
+  .toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(20px);background:#020617;border:1px solid #1e293b;color:white;padding:10px 14px;border-radius:12px;font-size:13px;box-shadow:0 12px 30px rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:.25s;z-index:100;display:flex;align-items:center;gap:8px;max-width:90vw}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .track-legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);background:#0b1733;border:1px solid #1e2f5a;padding:4px 8px;border-radius:999px}
+  .legend-dot{width:10px;height:10px;border-radius:3px}
+  .gallery{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+  .gallery .thumb{aspect-ratio:1;border-radius:10px;overflow:hidden;border:2px solid var(--line);background:#020617;display:grid;place-items:center}
+  .gallery .thumb img{width:100%;height:100%;object-fit:cover}
+  .gallery .thumb.com{border-color:#eab30855} .gallery .thumb.sem{border-color:#22c55e55}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo">◉</div>
+    <div>
+      <h1>FaceCounter <span style="background:linear-gradient(135deg,#0ea5e9,#22c55e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:800">v2.4</span></h1>
+      <p>Detecção de PESSOA (corpo) até 3,5m • ID único • Dual-scale • Sem duplicação</p>
+    </div>
+  </div>
+  <div class="badge">v2.4 • Camiseta Preta/Branca • Dual-scale</div>
+</header>
+
+<div class="container">
+  <div class="grid">
+    <div class="camera-card">
+      <div class="camera-top">
+        <h2><span class="dot off" id="statusDot"></span> <span id="statusText">Câmera desligada</span> <span style="color:var(--muted);font-weight:400;font-size:12px" id="fps">— FPS</span></h2>
+        <div class="controls">
+          <button class="btn primary" id="startBtn">▶ Iniciar câmera</button>
+          <button class="btn ghost" id="flipBtn" disabled>⇄ Virar</button>
+          <button class="btn ghost" id="mirrorBtn" disabled>🪞 Espelho</button>
+        </div>
+      </div>
+      <div class="stage" id="stage">
+        <video id="video" autoplay muted playsinline></video>
+        <canvas id="overlay" class="overlay"></canvas>
+        <div class="placeholder" id="placeholder">
+          <div class="ph-icon">🧍</div>
+          <h3>Novo modo Pessoa até 2,5 metros</h3>
+          <p>Agora detecta <b>corpo inteiro</b>, não só rosto. Funciona a <b>2,5m</b> e não conta a mesma pessoa parada 2x.<br><br>Toque em <b>Iniciar câmera</b> e aponte para corredor/porta.</p>
+          <div style="margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+            <span style="font-size:11px;background:#22c55e20;border:1px solid #22c55e30;color:#86efac;padding:6px 10px;border-radius:999px">✓ 2,5m de distância</span>
+            <span style="font-size:11px;background:#0ea5e920;border:1px solid #0ea5e930;color:#7dd3fc;padding:6px 10px;border-radius:999px">✓ Corpo + rosto</span>
+            <span style="font-size:11px;background:#f59e0b20;border:1px solid #f59e0b30;color:#fde68a;padding:6px 10px;border-radius:999px">✓ Sem duplicar parado</span>
+          </div>
+        </div>
+        <div class="privacy">
+          <span>🔒 <strong>Local:</strong> Tudo no seu aparelho. Sem nuvem.</span>
+          <span id="modelStatus" style="white-space:nowrap;background:#f59e0b;color:white;padding:4px 8px;border-radius:999px;font-weight:700;font-size:10px">Carregando IA...</span>
+        </div>
+      </div>
+      <div style="padding:12px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;background:#0b1733;border-top:1px solid var(--line)">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" id="pauseBtn" disabled>⏸ Pausar</button>
+          <button class="btn" id="resetBtn">↺ Zerar</button>
+          <button class="btn" id="shotBtn" disabled>📸 Foto</button>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn ghost" id="csvBtn">⬇ CSV</button>
+          <button class="btn ghost" id="installBtn" style="display:none">📲 Instalar</button>
+        </div>
+      </div>
+      <div class="track-legend" style="padding:0 14px 12px;background:#0b1733">
+        <span class="legend-item"><span class="legend-dot" style="background:#22c55e"></span> Pessoa detectada</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span> Linha de contagem</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#38bdf8"></span> ID rastreado</span>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="kpi-grid">
+        <div class="kpi live">
+          <label>👁 No frame agora</label>
+          <strong id="liveCount">0</strong>
+          <span id="liveHint">Pessoas detectadas</span>
+        </div>
+        <div class="kpi total">
+          <label>🚶 Total que passaram</label>
+          <strong id="totalCount">0</strong>
+          <span>Cada ID conta 1×, mesmo parado</span>
+        </div>
+        <div class="kpi today">
+          <div>
+            <label>📊 Pico simultâneo</label>
+            <strong id="peakCount">0</strong>
+            <span style="color:var(--muted);font-size:11px">Máx. juntos</span>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:11px;color:var(--muted)">Sessão</div>
+            <div id="sessionTime" style="font-family:JetBrains Mono,monospace;font-weight:800;font-size:18px">00:00</div>
+            <div style="font-size:11px;color:var(--muted)" id="sessionDate">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="kpi-grid" id="shirtKpi" style="display:none">
+        <div class="kpi" style="border-color:#111827;background:linear-gradient(180deg,#0f172a,#0b1220)">
+          <label>⬛ Camiseta Preta</label>
+          <strong id="blackCount" style="color:#e5e7eb">0</strong>
+          <span id="blackPct">0% do total</span>
+        </div>
+        <div class="kpi" style="border-color:#f8fafc;background:linear-gradient(180deg,#1f2937,#111827)">
+          <label>⬜ Camiseta Branca</label>
+          <strong id="whiteCount" style="color:#f8fafc">0</strong>
+          <span id="whitePct">0% do total</span>
+        </div>
+      </div>
+
+
+      <div class="panel">
+        <h3>🧠 Modo de detecção</h3>
+        <div class="mode-tabs">
+          <button class="mode-tab active" id="modePerson">🧍 Pessoa <small>Corpo - até 2,5m ✓</small></button>
+          <button class="mode-tab" id="modeFace">🙂 Rosto <small>Close - até 1m</small></button>
+        </div>
+        <p style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.4" id="modeHint">Recomendado para seu caso: <b style="color:#86efac">Pessoa</b> detecta corpo inteiro a 3,5m, mesmo de máscara/costas. Rosto só pega de perto e de frente.</p>
+        <div class="row" id="personLongRow">
+          <div><b>📡 Alcance estendido pessoa 3,5m</b><br><small>Zoom 1,4x + modelo preciso + limiar adaptativo</small></div>
+          <div class="switch on" id="personLongSwitch"><i></i></div>
+        </div>
+        <div class="row" id="faceLongRow" style="display:none">
+          <div><b>🔭 Alcance estendido rosto 2,5m</b><br><small>Zoom digital 1,5x + alta sensibilidade</small></div>
+          <div class="switch on" id="faceLongSwitch"><i></i></div>
+        </div>
+        <div class="row">
+          <div><b>👕 Separar por camiseta</b><br><small>⬛ Preta • ⬜ Branca • cinza = outra</small></div>
+          <div class="switch" id="shirtSwitch"><i></i></div>
+        </div>
+        <div class="row" id="shirtDelayRow" style="display:none;flex-direction:column;align-items:stretch;gap:6px">
+          <div style="display:flex;justify-content:space-between;align-items:center"><b>⏳ Estabilização cor</b> <small id="shirtDelayVal">0,7s</small></div>
+          <input type="range" id="shirtDelayRange" min="0.3" max="2.0" step="0.1" value="0.7">
+          <small style="color:var(--muted);line-height:1.4">Tempo para estabilizar a cor da camiseta antes de <b>travar</b>. Após travar, o ID não muda mais. <span id="shirtDelayHint" style="color:#7dd3fc">Padrão 0,7s.</span></small>
+        </div>
+
+        
+        <div class="row" style="flex-direction:column;align-items:stretch;gap:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center"><b>Sensibilidade</b> <small id="confVal">50%</small></div>
+          <input type="range" id="confRange" min="25" max="75" value="40">
+          <small style="color:var(--muted)" id="confHint">50% ideal para 2,5m. Abaixo de 35% dá falso positivo.</small>
+        </div>
+
+        <div class="row">
+          <div><b>Contar apenas ao cruzar a linha</b><br><small>Desligado = conta quando entra no frame</small></div>
+          <div class="switch" id="lineSwitch"><i></i></div>
+        </div>
+        <div class="row" id="lineRow" style="display:none">
+          <div><b>Posição da linha</b><br><small>Arraste no vídeo</small></div>
+          <select id="linePos" class="select" style="max-width:140px">
+            <option value="50">Centro (50%)</option>
+            <option value="35">Topo (35%)</option>
+            <option value="65">Base (65%)</option>
+          </select>
+        </div>
+
+        <div class="row" style="flex-direction:column;align-items:stretch;gap:6px">
+          <div style="display:flex;justify-content:space-between;align-items:center"><b>Tempo para considerar nova pessoa</b> <small id="coolVal">2,5s</small></div>
+          <input type="range" id="coolRange" min="0.25" max="5" step="0.25" value="2.5">
+          <small style="color:var(--muted)">0,25s = fluxo ultra-rápido (esteira/catraca). 5s = fluxo lento (recepção). Se sair e voltar antes desse tempo, não conta de novo.</small>
+        </div>
+
+        <div class="row">
+          <div><b>Alerta sonoro</b><br><small>Beep ao contar</small></div>
+          <div class="switch" id="beepSwitch"><i></i></div>
+        </div>
+        <div class="row">
+          <div><b>Mostrar caixas + IDs</b></div>
+          <div class="switch on" id="boxSwitch"><i></i></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>📝 Histórico <span id="logCount" style="margin-left:auto;background:#0ea5e9;color:white;padding:2px 8px;border-radius:999px;font-size:11px">0</span></h3>
+        <div class="log" id="log"></div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn ghost" style="flex:1" id="clearLog">Limpar histórico</button>
+        </div>
+      </div>
+
+      <div class="help">
+        <h4>✅ O que mudou na v2</h4>
+        <ul>
+          <li><b>Detecção de corpo (coco-ssd):</b> detecta pessoa inteira a 2,5m, mesmo de costas, máscara ou rosto virado.</li>
+          <li><b>Rastreamento por ID:</b> cada pessoa ganha um ID (#1, #2). Se ficar parada na câmera, <b>não conta de novo</b>.</li>
+          <li><b>Melhor para distância:</b> usa resolução 1280x720 e pega pessoa pequena no frame.</li>
+          <li><b>Dica 2,5m:</b> posicione celular/computador na altura do peito, com corredor bem iluminado, sem contraluz.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="help" style="display:grid;gap:10px">
+    <h4>📏 Como posicionar para pegar a 2,5m</h4>
+    <ul>
+      <li><b>Altura:</b> 1,4m do chão (altura do peito), levemente inclinado para baixo.</li>
+      <li><b>Distância:</b> deixe a porta no centro do vídeo. A detecção pega pessoa de 40px de altura no frame (cabeça visível).</li>
+      <li><b>Luz:</b> corredor claro. Evite janela atrás da pessoa.</li>
+      <li><b>Linha:</b> coloque a linha amarela onde a pessoa TEM que passar (ex: batente da porta).</li>
+    </ul>
+  </div>
+  <p class="footer-note">FaceCounter v2.4 • BlazeFace (rosto) + COCO-SSD (pessoa) + Camiseta • Local • <span id="tzInfo"></span></p>
+  <p class="footer-note" style="margin-top:4px; font-weight:600; color:#cbd5e1; letter-spacing:.02em">Rafael de Souza Martins • Breno José Pereira • Gabriel José Mariano Paes • Gabriel Daniel Ferreira</p>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.0.7/dist/blazeface.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.js"></script>
+<script>
+const video=document.getElementById('video'), canvas=document.getElementById('overlay'), ctx=canvas.getContext('2d'), stage=document.getElementById('stage'), placeholder=document.getElementById('placeholder');
+const startBtn=document.getElementById('startBtn'), flipBtn=document.getElementById('flipBtn'), mirrorBtn=document.getElementById('mirrorBtn'), pauseBtn=document.getElementById('pauseBtn'), resetBtn=document.getElementById('resetBtn'), shotBtn=document.getElementById('shotBtn'), csvBtn=document.getElementById('csvBtn');
+const statusDot=document.getElementById('statusDot'), statusText=document.getElementById('statusText'), fpsEl=document.getElementById('fps'), modelStatus=document.getElementById('modelStatus');
+const liveCountEl=document.getElementById('liveCount'), totalCountEl=document.getElementById('totalCount'), peakCountEl=document.getElementById('peakCount'), sessionTimeEl=document.getElementById('sessionTime'), sessionDateEl=document.getElementById('sessionDate'), logEl=document.getElementById('log'), logCountEl=document.getElementById('logCount');
+const confRange=document.getElementById('confRange'), confVal=document.getElementById('confVal'), coolRange=document.getElementById('coolRange'), coolVal=document.getElementById('coolVal'), linePosSel=document.getElementById('linePos'), toastEl=document.getElementById('toast');
+const lineSwitch=document.getElementById('lineSwitch'), beepSwitch=document.getElementById('beepSwitch'), boxSwitch=document.getElementById('boxSwitch');
+const modePerson=document.getElementById('modePerson'), modeFace=document.getElementById('modeFace');
+
+let blazefaceModel=null, cocoModel=null;
+let shirtMobilenet=null; // não usado, detecção heurística HSV
+let separateShirts=false;
+let mode='person'; // person | face
+let running=false, paused=false, facingMode='user', mirrored=true, stream=null, rafId=null;
+let total=parseInt(localStorage.getItem('fc_total_v2')||'0',10);
+let peak=parseInt(localStorage.getItem('fc_peak_v2')||'0',10);
+let history=JSON.parse(localStorage.getItem('fc_history_v2')||'[]');
+let startTime=Date.now(), lastCountTime=0, lineEnabled=false, showBoxes=true, beepEnabled=false, confidenceThreshold=0.40, cooldownMs=2500, lineYPercent=50, fpsCounter={last:performance.now(),frames:0,fps:0}, audioCtx=null;
+let faceLongRange=true;
+let personLongRange=true;
+let shirtVerifyMs=700;
+let shirtMinVotes=4;
+let totalBlack=parseInt(localStorage.getItem('fc_total_black_v2')||'0',10);
+let totalWhite=parseInt(localStorage.getItem('fc_total_white_v2')||'0',10);
+let tracks=[], nextId=1;
+
+// Session timer
+setInterval(()=>{const d=Date.now()-startTime, s=Math.floor(d/1000)%60, m=Math.floor(d/60000)%60, h=Math.floor(d/3600000); sessionTimeEl.textContent=(h>0?String(h).padStart(2,'0')+':':'')+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');},800);
+sessionDateEl.textContent=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
+document.getElementById('tzInfo').textContent=Intl.DateTimeFormat().resolvedOptions().timeZone+' • '+new Date().toLocaleTimeString('pt-BR');
+
+function showToast(msg,icon='✅'){toastEl.textContent=icon+' '+msg;toastEl.classList.add('show');clearTimeout(showToast._t);showToast._t=setTimeout(()=>toastEl.classList.remove('show'),2400);}
+function save(){localStorage.setItem('fc_total_v2',total);localStorage.setItem('fc_peak_v2',peak);localStorage.setItem('fc_history_v2',JSON.stringify(history.slice(-300)));localStorage.setItem('fc_total_black_v2',totalBlack);localStorage.setItem('fc_total_white_v2',totalWhite);}
+function renderStats(){totalCountEl.textContent=total;peakCountEl.textContent=peak;logCountEl.textContent=history.length;const bc=document.getElementById('blackCount'), wc=document.getElementById('whiteCount'), bp=document.getElementById('blackPct'), wp=document.getElementById('whitePct'); if(bc){bc.textContent=totalBlack; wc.textContent=totalWhite; const tot=total||1; bp.textContent=Math.round(totalBlack*100/tot)+'% do total'; wp.textContent=Math.round(totalWhite*100/tot)+'% do total';}}
+function renderLog(){logEl.innerHTML='';if(history.length===0){logEl.innerHTML='<p style="font-size:12px;color:var(--muted);text-align:center;padding:18px">Nenhuma passagem ainda.</p>';return;} history.slice().reverse().slice(0,80).forEach(h=>{const d=document.createElement('div');d.className='entry';d.innerHTML=`<time>${h.time}</time><p>${h.label}</p><span class="pill">+${h.count}</span>`;logEl.appendChild(d);});}
+function pushHistory(count,ids,blackInBatch,whiteInBatch){const now=new Date();let extra=''; if(separateShirts){ const parts=[]; if(blackInBatch) parts.push(`${blackInBatch} preta ⬛`); if(whiteInBatch) parts.push(`${whiteInBatch} branca ⬜`); if(parts.length) extra=' • '+parts.join(' + '); } const e={time:now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}),date:now.toLocaleDateString('pt-BR'),iso:now.toISOString(),count, black:blackInBatch||0, white:whiteInBatch||0, label: (count>1?`${count} pessoas (IDs ${ids.join(', ')})`:`1 pessoa (ID ${ids[0]})`) + extra};history.push(e);if(history.length>500)history=history.slice(-500);renderLog();renderStats();save();beep();showToast(e.label,'🚶');}
+
+const beep=()=>{if(!beepEnabled)return;try{if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sine';o.frequency.value=880;g.gain.value=0.12;o.connect(g);g.connect(audioCtx.destination);o.start();g.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+0.22);o.stop(audioCtx.currentTime+0.23);}catch(e){}};
+function toggleSwitch(el,s){el.classList.toggle('on',s);}
+
+renderStats();renderLog();
+confVal.textContent=Math.round(confidenceThreshold*100)+'%'; coolVal.textContent=(cooldownMs/1000).toFixed(1).replace('.',',')+'s';
+
+lineSwitch.addEventListener('click',()=>{lineEnabled=!lineEnabled;toggleSwitch(lineSwitch,lineEnabled);document.getElementById('lineRow').style.display=lineEnabled?'flex':'none';showToast(lineEnabled?'Linha ativada':'Linha desativada','📏');});
+beepSwitch.addEventListener('click',()=>{beepEnabled=!beepEnabled;toggleSwitch(beepSwitch,beepEnabled);if(beepEnabled)beep();});
+boxSwitch.addEventListener('click',()=>{showBoxes=!showBoxes;toggleSwitch(boxSwitch,showBoxes);});
+confRange.addEventListener('input',()=>{confidenceThreshold=parseInt(confRange.value,10)/100;confVal.textContent=confRange.value+'%';});
+coolRange.addEventListener('input',()=>{cooldownMs=parseFloat(coolRange.value)*1000;coolVal.textContent=coolRange.value.replace('.',',')+'s';});
+linePosSel.addEventListener('change',()=>lineYPercent=parseInt(linePosSel.value,10));
+
+// Mode switch
+function setMode(m){mode=m;modePerson.classList.toggle('active',m==='person');modeFace.classList.toggle('active',m==='face');document.getElementById('modeHint').innerHTML=m==='person'?'Recomendado: <b style="color:#86efac">Pessoa</b> até 3,5m (dual-scale), pega de costas/máscara.':'Modo <b style="color:#38bdf8">Rosto 2,5m</b> com zoom digital 1,5x — detecta rosto pequeno a distância (precisa estar de frente e bem iluminado).';document.getElementById('faceLongRow').style.display=m==='face'?'flex':'none';document.getElementById('personLongRow').style.display=m==='person'?'flex':'none';confRange.value=m==='person'?'40':'35';confidenceThreshold=parseInt(confRange.value)/100;confVal.textContent=confRange.value+'%';document.getElementById('confHint').textContent=m==='person'?'40% ideal para 3,5m com limiar adaptativo (pequenos 30%). Abaixo de 25% dá falso positivo.':'35% recomendado para rosto a 2,5m (mais sensível). Abaixo de 25% pode dar falsos.';tracks=[];nextId=1;showToast(m==='person'?'Modo Pessoa 3,5m dual-scale':'Modo Rosto 2,5m (zoom 1,5x)','🧠');}
+modePerson.addEventListener('click',()=>setMode('person')); modeFace.addEventListener('click',()=>setMode('face'));
+const personLongSwitch=document.getElementById('personLongSwitch');
+if(personLongSwitch){ personLongSwitch.addEventListener('click',()=>{personLongRange=!personLongRange;toggleSwitch(personLongSwitch,personLongRange);showToast(personLongRange?'Pessoa 3,5m ligado — zoom 1,4x + limiar adaptativo':'Pessoa alcance normal — 2m','📡');}); }
+const faceLongSwitch=document.getElementById('faceLongSwitch');
+faceLongSwitch.addEventListener('click',()=>{faceLongRange=!faceLongRange;toggleSwitch(faceLongSwitch,faceLongRange);showToast(faceLongRange?'Zoom 1,5x ligado — rosto a 2,5m':'Zoom desligado — até 1m','🔭');});
+const shirtSwitch=document.getElementById('shirtSwitch');
+const shirtDelayRow=document.getElementById('shirtDelayRow');
+const shirtDelayRange=document.getElementById('shirtDelayRange');
+const shirtDelayVal=document.getElementById('shirtDelayVal');
+function syncShirtDelayUI(){ shirtVerifyMs=Math.round(parseFloat(shirtDelayRange.value)*1000); shirtDelayVal.textContent=shirtDelayRange.value.replace('.',',')+'s'; const h=document.getElementById('shirtDelayHint'); if(h) h.textContent=`Padrão ${shirtDelayRange.value.replace('.',',')}s (~${Math.round(shirtVerifyMs/150)} frames).`; }
+if(shirtDelayRange){ shirtDelayRange.addEventListener('input',()=>{ syncShirtDelayUI(); showToast(`Estabilização: ${shirtDelayVal.textContent} até travar`,'⏳'); }); syncShirtDelayUI(); }
+shirtSwitch.addEventListener('click',()=>{separateShirts=!separateShirts;toggleSwitch(shirtSwitch,separateShirts);document.getElementById('shirtKpi').style.display=separateShirts?'grid':'none';if(shirtDelayRow) shirtDelayRow.style.display=separateShirts?'flex':'none';showToast(separateShirts?`Separação por camiseta ativada • ${shirtDelayVal.textContent} até travar (⬛/⬜)`:'Separação por camiseta desativada','👕');if(separateShirts) renderStats(); updateLegend();});
+// Legenda dinâmica
+const legendEl=document.querySelector('.track-legend');
+function updateLegend(){
+  if(separateShirts){
+    legendEl.innerHTML='<span class="legend-item"><span class="legend-dot" style="background:#111827;border:1px solid #334155"></span> Preta ⬛</span><span class="legend-item"><span class="legend-dot" style="background:#f8fafc;border:1px solid #334155"></span> Branca ⬜</span><span class="legend-item"><span class="legend-dot" style="background:#94a3b8"></span> Outra</span><span class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span> Linha</span>';
+  } else {
+    legendEl.innerHTML='<span class="legend-item"><span class="legend-dot" style="background:#22c55e"></span> Pessoa detectada</span><span class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span> Linha de contagem</span><span class="legend-item"><span class="legend-dot" style="background:#38bdf8"></span> ID rastreado</span>';
+  }
+}
+shirtSwitch.addEventListener('click', updateLegend);
+
+// Canvas auxiliares — pessoa e rosto
+const personZoomCanvas=document.createElement('canvas');
+const personZoomCtx=personZoomCanvas.getContext('2d');
+function preparePersonZoomCanvas(){
+  const vw=video.videoWidth||1280, vh=video.videoHeight||720;
+  const zoom=1.4;
+  const cw=Math.round(vw/zoom), ch=Math.round(vh/zoom);
+  const sx=Math.round((vw-cw)/2), sy=Math.round((vh-ch)/2);
+  personZoomCanvas.width=Math.round(cw*1.25); personZoomCanvas.height=Math.round(ch*1.25);
+  personZoomCtx.drawImage(video, sx,sy,cw,ch, 0,0, personZoomCanvas.width, personZoomCanvas.height);
+  return {sx,sy,scale: personZoomCanvas.width/cw, zoomW: personZoomCanvas.width, zoomH: personZoomCanvas.height};
+}
+const faceZoomCanvas=document.createElement('canvas');
+const faceZoomCtx=faceZoomCanvas.getContext('2d');
+function prepareZoomCanvas(){
+  const vw=video.videoWidth||1280, vh=video.videoHeight||720;
+  const zoom=1.5;
+  const cw=Math.round(vw/zoom), ch=Math.round(vh/zoom);
+  const sx=Math.round((vw-cw)/2), sy=Math.round((vh-ch)/2);
+  faceZoomCanvas.width=cw*1.5; faceZoomCanvas.height=ch*1.5;
+  faceZoomCtx.drawImage(video, sx,sy,cw,ch, 0,0, faceZoomCanvas.width, faceZoomCanvas.height);
+  return {sx,sy,scale: faceZoomCanvas.width/cw, zoomW: faceZoomCanvas.width, zoomH: faceZoomCanvas.height};
+}
+// === DETECTOR DE CAMISETA v2.4 — identifica camiseta preta / branca no tronco ===
+// Usa região do tronco (peito) e análise HSV/Luminância; ignora fundo
+const shirtCanvas=document.createElement('canvas');
+const shirtCtx=shirtCanvas.getContext('2d', {willReadFrequently:true});
+shirtCanvas.width=80; shirtCanvas.height=80;
+function getShirtRegion(bbox){
+  const [x,y,w,h]=bbox;
+  const vw=video.videoWidth, vh=video.videoHeight;
+  let sx, sy, sw, sh;
+  if(mode==='person'){
+    // Tronco: centro do corpo, 28% a 64% da altura (peito), 60% largura central
+    sx = x + w*0.20; sy = y + h*0.28; sw = w*0.60; sh = h*0.36;
+  } else {
+    // Rosto -> estima tronco abaixo do rosto
+    sx = x - w*0.60; sy = y + h*0.95; sw = w*2.20; sh = h*1.90;
+  }
+  sx = Math.max(0, sx); sy = Math.max(0, sy);
+  sw = Math.min(sw, vw - sx); sh = Math.min(sh, vh - sy);
+  return {sx, sy, sw, sh};
+}
+function detectShirtColor(bbox){
+  if(!separateShirts) return 'other';
+  try{
+    const {sx, sy, sw, sh} = getShirtRegion(bbox);
+    const vw=video.videoWidth, vh=video.videoHeight;
+    if(!vw || sw<14 || sh<14) return 'other';
+    shirtCanvas.width=80; shirtCanvas.height=80;
+    shirtCtx.drawImage(video, sx, sy, sw, sh, 0,0,80,80);
+    const img=shirtCtx.getImageData(0,0,80,80);
+    const d=img.data;
+    let white=0, black=0, total=0;
+    // Amostragem com margem 8px para evitar borda do bounding box
+    for(let yy=8; yy<72; yy++){
+      for(let xx=8; xx<72; xx++){
+        const i=(yy*80+xx)*4;
+        const r=d[i], g=d[i+1], b=d[i+2];
+        const max=Math.max(r,g,b), min=Math.min(r,g,b);
+        const sat = max===0?0:(max-min)/max;
+        const lum = 0.299*r+0.587*g+0.114*b;
+        const v = max;
+        total++;
+        // Branco: alta luminância + baixa saturação + alto valor
+        if(lum > 150 && sat < 0.35 && v > 160) white++;
+        // Preto: baixa luminância + baixo valor (permite saturação um pouco maior por iluminação)
+        else if(lum < 90 && v < 95 && sat < 0.60) black++;
+      }
+    }
+    const whiteRatio = white/total;
+    const blackRatio = black/total;
+    // Thresholds: 32% de pixels do tronco para validar cor dominante
+    // Branco tem mais falso positivo (parede clara), exige mais evidência
+    if(whiteRatio > 0.30) return 'white';
+    if(blackRatio > 0.28) return 'black';
+    // Caso nenhum domine, verifica se há predominância relativa (ex: 2x mais)
+    if(whiteRatio > 0.20 && whiteRatio > blackRatio*1.8) return 'white';
+    if(blackRatio > 0.18 && blackRatio > whiteRatio*1.8) return 'black';
+    return 'other';
+  }catch(e){ return 'other'; }
+}
+async function detectShirtColorAsync(bbox){
+  // heurístico síncrono, mas mantém async para compatibilidade
+  return detectShirtColor(bbox);
+}
+
+// Load models — v2.4 usa mobilenet_v2 (mais preciso para longe) + fallback lite
+(async()=>{try{
+  modelStatus.textContent='Carregando IA v2.4 (Pessoa 3,5m + Camiseta)...';modelStatus.style.background='#f59e0b';
+  const bfP=blazeface.load();
+  let cocoP=cocoSsd.load({base:'mobilenet_v2'}).catch(()=>cocoSsd.load({base:'lite_mobilenet_v2'}));
+  const [bf, coco]=await Promise.all([bfP, cocoP]);
+  blazefaceModel=bf;cocoModel=coco;
+  modelStatus.textContent='IA pronta ✓ (3,5m)';modelStatus.style.background='#22c55e';
+  showToast('IA v2.4 carregada: Pessoa 3,5m + Camiseta P/B','🧠');
+}catch(e){console.error(e);modelStatus.textContent='Falha IA';modelStatus.style.background='#ef4444';showToast('Falha ao carregar. Verifique internet.','⚠️');}})();
+// v2.4 — Camiseta preta/branca usa heurística HSV no tronco (sem treino neural)
+
+// Camera - v2.4: alta resolução para distância (1920x1080) + zoom adaptativo
+async function startCamera(){if(running)return;try{if(stream)stream.getTracks().forEach(t=>t.stop());const isFaceLong=mode==='face' && faceLongRange; const isPersonLong=mode==='person' && personLongRange; const wantW=isPersonLong?1920:(isFaceLong?1920:1280); const wantH=isPersonLong?1080:(isFaceLong?1080:720); stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facingMode,width:{ideal: wantW},height:{ideal: wantH},frameRate:{ideal:30}, advanced: isPersonLong?[{zoom:1.0, focusMode:'continuous'}]: (isFaceLong?[{zoom:1.0}]:[])},audio:false});video.srcObject=stream;await video.play();placeholder.style.display='none';running=true;paused=false;statusDot.className='dot';statusText.textContent=isPersonLong?'Ativa — pessoa 3,5m (dual-scale + 1920p)':(isFaceLong?'Ativa — rosto 2,5m (zoom 1,5x)':'Ativa — detectando até 2,5m');startBtn.textContent='⏹ Parar';startBtn.classList.remove('primary');flipBtn.disabled=false;mirrorBtn.disabled=false;pauseBtn.disabled=false;shotBtn.disabled=false;resizeCanvas();fpsCounter.last=performance.now();loop();showToast(facingMode==='user'?'Frontal ativa':'Traseira ativa','📷');}catch(err){console.error(err);showToast('Permissão negada. Libere a câmera.','🔒');statusText.textContent='Falha ao acessar câmera';}}
+function stopCamera(){running=false;if(rafId)cancelAnimationFrame(rafId);if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;video.srcObject=null;placeholder.style.display='block';statusDot.className='dot off';statusText.textContent='Câmera desligada';fpsEl.textContent='— FPS';startBtn.textContent='▶ Iniciar câmera';startBtn.classList.add('primary');flipBtn.disabled=true;mirrorBtn.disabled=true;pauseBtn.disabled=true;shotBtn.disabled=true;ctx.clearRect(0,0,canvas.width,canvas.height);liveCountEl.textContent='0';tracks=[];}
+startBtn.addEventListener('click',()=>running?stopCamera():startCamera());
+flipBtn.addEventListener('click',async()=>{facingMode=facingMode==='user'?'environment':'user';mirrored=facingMode==='user';video.classList.toggle('no-mirror',!mirrored);if(running){running=false;if(stream)stream.getTracks().forEach(t=>t.stop());await startCamera();}});
+mirrorBtn.addEventListener('click',()=>{mirrored=!mirrored;video.classList.toggle('no-mirror',!mirrored);showToast(mirrored?'Espelho ligado':'Espelho desligado','🪞');});
+pauseBtn.addEventListener('click',()=>{paused=!paused;pauseBtn.textContent=paused?'▶ Retomar':'⏸ Pausar';statusText.textContent=paused?'Pausado':'Ativa — detectando até 2,5m';statusDot.className=paused?'dot warn':'dot';if(!paused)loop();});
+function resizeCanvas(){const r=stage.getBoundingClientRect(),dpr=window.devicePixelRatio||1;canvas.width=r.width*dpr;canvas.height=r.height*dpr;canvas.style.width=r.width+'px';canvas.style.height=r.height+'px';ctx.setTransform(dpr,0,0,dpr,0,0);}
+window.addEventListener('resize',resizeCanvas);
+
+// Drag line
+let isDragging=false;
+stage.addEventListener('pointerdown',e=>{if(!lineEnabled)return;const r=stage.getBoundingClientRect(),y=((e.clientY-r.top)/r.height)*100;if(Math.abs(y-lineYPercent)<10)isDragging=true;});
+window.addEventListener('pointermove',e=>{if(!isDragging)return;const r=stage.getBoundingClientRect();lineYPercent=Math.max(10,Math.min(90,((e.clientY-r.top)/r.height)*100));linePosSel.value=String(Math.round(lineYPercent/5)*5);});
+window.addEventListener('pointerup',()=>isDragging=false);
+stage.addEventListener('touchstart',e=>{if(!lineEnabled)return;const r=stage.getBoundingClientRect(),y=((e.touches[0].clientY-r.top)/r.height)*100;if(Math.abs(y-lineYPercent)<12)isDragging=true;},{passive:true});
+window.addEventListener('touchmove',e=>{if(!isDragging)return;const r=stage.getBoundingClientRect();lineYPercent=Math.max(10,Math.min(90,((e.touches[0].clientY-r.top)/r.height)*100));},{passive:true});
+window.addEventListener('touchend',()=>isDragging=false);
+
+// Tracking helpers
+function iou(a,b){const x1=Math.max(a.x,b.x), y1=Math.max(a.y,b.y), x2=Math.min(a.x+a.w,b.x+b.w), y2=Math.min(a.y+a.h,b.y+b.h); if(x2<=x1||y2<=y1) return 0; const inter=(x2-x1)*(y2-y1), uni=a.w*a.h+b.w*b.h-inter; return inter/uni;}
+function dist(a,b){return Math.hypot(a.cx-b.cx, a.cy-b.cy);}
+
+let frameIdx=0;
+async function loop(){if(!running||paused) return; rafId=requestAnimationFrame(loop); frameIdx++; fpsCounter.frames++; const now=performance.now(); if(now-fpsCounter.last>500){fpsCounter.fps=Math.round(fpsCounter.frames*1000/(now-fpsCounter.last)); fpsEl.textContent=fpsCounter.fps+' FPS'; fpsCounter.frames=0; fpsCounter.last=now;}
+  if(!video.videoWidth || video.readyState<2) return;
+  // Throttle: detect a cada 2 frames para performance
+  if(frameIdx%2!==0){ draw(tracks.map(t=>({bbox:[t.x,t.y,t.w,t.h], id:t.id, score:t.score, shirtColor:t.shirtColor})), false); return; }
+
+  try{
+    let raw=[];
+    if(mode==='person' && cocoModel){
+      // v2.2: Detecção dual-scale + limiar adaptativo para distância 3,5m
+      const predsFull=await cocoModel.detect(video);
+      let allPreds=[...predsFull];
+      if(personLongRange && video.videoWidth){
+        try{
+          const z=preparePersonZoomCanvas();
+          const predsZoom=await cocoModel.detect(personZoomCanvas);
+          predsZoom.forEach(p=>{
+            if(p.class!=='person') return;
+            const [x,y,w,h]=p.bbox;
+            // mapeia do zoom para coordenadas originais
+            const ox = z.sx + x / z.scale;
+            const oy = z.sy + y / z.scale;
+            const ow = w / z.scale;
+            const oh = h / z.scale;
+            // só adiciona se veio do centro (evita duplicar grandes já detectados)
+            allPreds.push({class:p.class, score:p.score, bbox:[ox,oy,ow,oh]});
+          });
+        }catch(e){ /* ignora zoom pessoa */ }
+      }
+      // Limiar adaptativo: pessoas pequenas (longe) precisam de menos confiança
+      const filteredP=allPreds.filter(p=>{
+        if(p.class!=='person') return false;
+        const [x,y,w,h]=p.bbox; const area=w*h; const isSmall= area < 12000 || h < 90;
+        const thresh = isSmall ? Math.max(0.30, confidenceThreshold-0.12) : confidenceThreshold;
+        return p.score >= thresh;
+      });
+      // NMS para remover duplicatas das duas escalas (IoU 0.35)
+      filteredP.sort((a,b)=> b.score-a.score);
+      let keepP=[];
+      filteredP.forEach(p=>{
+        const [x,y,w,h]=p.bbox; const box={x,y,w,h};
+        if(!keepP.some(k=>{ const [kx,ky,kw,kh]=k.bbox; return iou(box,{x:kx,y:ky,w:kw,h:kh})>0.35; })) keepP.push(p);
+      });
+      raw=await Promise.all(keepP.map(async p=>({bbox:p.bbox, score:p.score, class:p.class, shirtColor: await detectShirtColorAsync(p.bbox)})));
+    } else if(mode==='face' && blazefaceModel){
+      // Detecção de rosto TURBINADA para 2,5m: duas escalas + zoom
+      const facesFull=await blazefaceModel.estimateFaces(video,false);
+      let allFaces=[...facesFull];
+      // Se modo longo alcance ligado, faz segunda detecção com zoom 1.5x no centro
+      if(faceLongRange && video.videoWidth){
+        try{
+          const z=prepareZoomCanvas();
+          const facesZoom=await blazefaceModel.estimateFaces(faceZoomCanvas,false);
+          // Mapeia coordenadas do zoom de volta para o vídeo original
+          facesZoom.forEach(f=>{
+            const [x1,y1]=f.topLeft, [x2,y2]=f.bottomRight;
+            // desfaz o upscale + offset do crop
+            const ox= z.sx + x1 / z.scale;
+            const oy= z.sy + y1 / z.scale;
+            const ox2= z.sx + x2 / z.scale;
+            const oy2= z.sy + y2 / z.scale;
+            allFaces.push({topLeft:[ox,oy], bottomRight:[ox2,oy2], probability:f.probability, landmarks:f.landmarks});
+          });
+        }catch(e){ /* ignora zoom se falhar */ }
+      }
+      // FILTRO MÍNIMO para rosto (garante detecção)
+      function isValidFace(f, vw, vh){
+        const [x1,y1]=f.topLeft, [x2,y2]=f.bottomRight;
+        const w=x2-x1, h=y2-y1;
+        if(w<12 || h<12) return false;
+        if(w>vw*0.90 || h>vh*0.90) return false;
+        const ratio=w/h;
+        if(ratio<0.30 || ratio>2.0) return false;
+        return true;
+      }
+      const vw=video.videoWidth||1280, vh=video.videoHeight||720;
+      // Usa sensibilidade direta, sem offset que escondia rostos
+      let filtered=allFaces.filter(p=>p.probability[0]>= confidenceThreshold && isValidFace(p, vw, vh));
+      // Ordena por confiança e remove sobrepostos (NMS mais rigoroso 0.30)
+      filtered.sort((a,b)=> b.probability[0]-a.probability[0]);
+      let keep=[];
+      filtered.forEach(f=>{
+        const [x1,y1]=f.topLeft, [x2,y2]=f.bottomRight;
+        const box={x:x1,y:y1,w:x2-x1,h:y2-y1};
+        if(!keep.some(k=> iou(box,{x:k.topLeft[0],y:k.topLeft[1],w:k.bottomRight[0]-k.topLeft[0],h:k.bottomRight[1]-k.topLeft[1]})>0.30 )){
+          keep.push(f);
+        }
+      });
+      const keepMapped=await Promise.all(keep.map(async f=>{const [x1,y1]=f.topLeft, [x2,y2]=f.bottomRight; const bbox=[x1,y1,x2-x1,y2-y1]; const sc=await detectShirtColorAsync(bbox); return {bbox, score:f.probability[0], landmarks:f.landmarks, shirtColor:sc};}));
+      raw=keepMapped;
+    }
+
+    // Tracking update - CORRIGIDO para movimento rápido
+    const nowMs=Date.now();
+    // Mantém trilha por mais tempo para movimento rápido não gerar novo ID
+    tracks=tracks.filter(t=> nowMs - t.lastSeen < Math.max(1800, cooldownMs+800));
+    // Estimativa de velocidade: amplia raio de busca para rosto em movimento rápido
+    const isFaceMode = mode==='face';
+    // Match
+    let unmatched=[...raw];
+    let matchedIds=new Set();
+    tracks.forEach(t=>{
+      let best=null, bestDist=Infinity, bestIdx=-1;
+      // Calcula velocidade estimada (delta do último frame)
+      const vx = t.vx||0, vy = t.vy||0;
+      const predCx = t.cx + vx*0.7, predCy = t.cy + vy*0.7; // predição simples
+      unmatched.forEach((d,idx)=>{
+        const cx=d.bbox[0]+d.bbox[2]/2, cy=d.bbox[1]+d.bbox[3]/2;
+        const cand={x:d.bbox[0], y:d.bbox[1], w:d.bbox[2], h:d.bbox[3], cx, cy};
+        const dDist= isFaceMode ? Math.hypot(predCx-cx, predCy-cy) : dist(t,cand);
+        const dIou=iou(t,cand);
+        // Raio adaptativo MAIOR para movimento rápido: 110px + 120% do tamanho
+        const baseRadius = isFaceMode ? 110 : 90;
+        const maxDist=Math.max(baseRadius, Math.min(t.w,t.h)*1.2 + Math.hypot(vx,vy)*2);
+        if((dIou>0.12 || dDist<maxDist) && dDist<bestDist){best=cand; bestDist=dDist; bestIdx=idx;}
+      });
+      if(best!==null){
+        t.vx = best.cx - t.cx; t.vy = best.cy - t.cy;
+        t.x=best.x; t.y=best.y; t.w=best.w; t.h=best.h; t.cx=best.cx; t.cy=best.cy; t.lastSeen=nowMs; t.score=unmatched[bestIdx].score;
+        // === Verificação cor camiseta com atraso + TRAVA ===
+        if(separateShirts){
+          if(!t.shirtLocked){
+            const sc=unmatched[bestIdx].shirtColor || 'other';
+            t.blackCount = (t.blackCount||0) + (sc==='black'?1:0);
+            t.whiteCount = (t.whiteCount||0) + (sc==='white'?1:0);
+            t.otherCount = (t.otherCount||0) + (sc==='other'?1:0);
+            if((t.blackCount+t.whiteCount+t.otherCount)>14){ t.blackCount=Math.round(t.blackCount*0.65); t.whiteCount=Math.round(t.whiteCount*0.65); t.otherCount=Math.round(t.otherCount*0.65); }
+            const totPrev=t.blackCount+t.whiteCount+t.otherCount;
+            // prévia: maioria simples
+            if(t.blackCount > t.whiteCount && t.blackCount > t.otherCount) t.shirtColor='black';
+            else if(t.whiteCount > t.blackCount && t.whiteCount > t.otherCount) t.shirtColor='white';
+            else t.shirtColor='other';
+            const elapsed=nowMs - t.firstSeen; const totalVotes=t.blackCount+t.whiteCount+t.otherCount;
+            if(elapsed >= shirtVerifyMs && totalVotes >= shirtMinVotes){
+              t.shirtLocked=true; t.lockedAt=nowMs;
+              // trava na cor dominante com pelo menos 40% dos votos
+              const maxV = Math.max(t.blackCount, t.whiteCount, t.otherCount);
+              if(maxV/totPrev >= 0.40){
+                if(t.blackCount===maxV) t.shirtColor='black';
+                else if(t.whiteCount===maxV) t.shirtColor='white';
+                else t.shirtColor='other';
+              }
+            }
+          }
+        } else { t.shirtColor='other'; t.shirtLocked=false; }
+        t.prevCy=t.cyPrev ?? t.cy; t.cyPrev=t.cy;
+        matchedIds.add(t.id);
+        unmatched.splice(bestIdx,1);
+      }
+    });
+    // Create new tracks - evita duplicar por flicker, raio maior para rosto rápido
+    let newIds=[];
+    unmatched.forEach(d=>{
+      const cx=d.bbox[0]+d.bbox[2]/2, cy=d.bbox[1]+d.bbox[3]/2;
+      const nearThreshold = isFaceMode ? 95 : 75;
+      const isNearExisting=tracks.some(t=> dist(t,{cx,cy})< nearThreshold && (nowMs - t.lastSeen)< Math.max(cooldownMs, 600));
+      if(isNearExisting) return;
+      const id=nextId++;
+      const isLockedInit = !separateShirts;
+      const tr={id, x:d.bbox[0], y:d.bbox[1], w:d.bbox[2], h:d.bbox[3], cx, cy, cyPrev:cy, prevCy:cy, lastSeen:nowMs, score:d.score, counted:false, firstSeen:nowMs, vx:0, vy:0, shirtColor:d.shirtColor||'other', blackCount:(d.shirtColor==='black'?1:0), whiteCount:(d.shirtColor==='white'?1:0), otherCount:(d.shirtColor==='other'?1:0), shirtLocked:isLockedInit, lockedAt:isLockedInit?nowMs:null};
+      if(separateShirts && shirtVerifyMs<=0){ tr.shirtLocked=true; tr.lockedAt=nowMs; }
+      tracks.push(tr);
+      newIds.push(id);
+    });
+
+    let toCount=[];
+    if(!lineEnabled){
+      // Total conta imediatamente, mesmo separando por camiseta — camiseta preta/branca só após travar
+      newIds.forEach(id=>{toCount.push(id);});
+    } else {
+      const vH=video.videoHeight||720; const lineYPx=(lineYPercent/100)*vH;
+      tracks.forEach(t=>{
+        if(t.counted) return;
+        const isActive= matchedIds.has(t.id) || newIds.includes(t.id);
+        if(isActive){
+          const crossed=(t.prevCy < lineYPx && t.cy >= lineYPx) || (t.prevCy > lineYPx && t.cy <= lineYPx);
+          const nearLine=Math.abs(t.cy - lineYPx) < vH*0.09;
+          if(crossed || (newIds.includes(t.id) && nearLine)){ t.lineCrossPending=true; t.lineCrossAt=nowMs; }
+        }
+        // Linha conta ao cruzar; camiseta só influencia cor, não impede contagem total
+        if(t.lineCrossPending){
+          // Se separando, exige trava para contar? Não — conta total imediato, cor fica pendente
+          t.counted=true; t.lineCrossPending=false;
+          toCount.push(t.id);
+          setTimeout(()=>{t.counted=false;}, 5000);
+        }
+        if(isActive) t.prevCy=t.cy;
+      });
+    }
+
+    if(toCount.length>0){
+      const blackInBatch=toCount.filter(id=>{const tr=tracks.find(x=>x.id===id); return tr && tr.shirtColor==='black';}).length;
+      const whiteInBatch=toCount.filter(id=>{const tr=tracks.find(x=>x.id===id); return tr && tr.shirtColor==='white';}).length;
+      total+=toCount.length;
+      totalBlack+=blackInBatch;
+      totalWhite+=whiteInBatch;
+      totalCountEl.textContent=total;
+      tracks.forEach(t=>{if(toCount.includes(t.id)) t.counted=true;});
+      pushHistory(toCount.length, toCount, blackInBatch, whiteInBatch);
+      save();
+      if(peak < tracks.length) {peak=tracks.length; save();}
+    }
+
+    liveCountEl.textContent=String(tracks.length || raw.length);
+    if(tracks.length>peak){peak=tracks.length; peakCountEl.textContent=peak; save();} else {peakCountEl.textContent=peak;}
+
+    draw(raw.map(d=>{ const tr=tracks.find(t=> Math.abs(t.cx-(d.bbox[0]+d.bbox[2]/2))<10 && Math.abs(t.cy-(d.bbox[1]+d.bbox[3]/2))<10); return {bbox:d.bbox, score:d.score, id: tr?.id ?? `?`, shirtColor: tr ? tr.shirtColor : d.shirtColor, shirtLocked: tr ? !!tr.shirtLocked : !separateShirts};}), true);
+
+  }catch(e){ console.error(e); }
+}
+
+function draw(detections, showIds){
+  const W=stage.clientWidth, H=stage.clientHeight;
+  ctx.clearRect(0,0,W,H);
+  if(lineEnabled){
+    const y=H*(lineYPercent/100);
+    ctx.save(); ctx.strokeStyle='#f59e0b'; ctx.setLineDash([10,8]); ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle='#f59e0b'; ctx.beginPath(); ctx.arc(14,y,8,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='white'; ctx.font='700 10px Inter'; ctx.fillText('LINHA',26,y+3);
+    ctx.fillStyle='rgba(245,158,11,0.08)'; ctx.fillRect(0,y-H*0.09,W,H*0.18);
+    ctx.fillStyle='rgba(0,0,0,0.55)'; ctx.fillRect(W-148,y-14,148,20);
+    ctx.fillStyle='#fde68a'; ctx.font='600 11px Inter'; ctx.fillText('→ conta ao cruzar',W-138,y);
+    ctx.restore();
+  }
+  if(!detections||detections.length===0||!showBoxes) return;
+  const vW=video.videoWidth||1280, vH=video.videoHeight||720, scaleX=W/vW, scaleY=H/vH;
+  detections.forEach((d,idx)=>{
+    let [x,y,w,h]=d.bbox;
+    let sx=x*scaleX, sy=y*scaleY, sw=w*scaleX, sh=h*scaleY;
+    if(mirrored){ sx=W - (sx+sw); }
+    ctx.save();
+    const isVerifying = separateShirts && d.shirtLocked===false;
+    const isBlack = separateShirts && d.shirtColor==='black' && !isVerifying;
+    const isWhite = separateShirts && d.shirtColor==='white' && !isVerifying;
+    let baseColor, shadowColor, dash=[];
+    if(isVerifying){ baseColor='#94a3b8'; shadowColor='rgba(148,163,184,0.35)'; dash=[6,5]; } else if(separateShirts){ if(isBlack){ baseColor='#0f172a'; shadowColor='rgba(15,23,42,0.55)'; } else if(isWhite){ baseColor='#f8fafc'; shadowColor='rgba(248,250,252,0.55)'; } else { baseColor='#64748b'; shadowColor='rgba(100,116,139,0.35)'; } } else { baseColor = mode==='person'?'#22c55e':'#38bdf8'; shadowColor = mode==='person'?'rgba(34,197,94,0.55)':'rgba(56,189,248,0.5)'; }
+    ctx.strokeStyle=baseColor; ctx.lineWidth=2.6; ctx.shadowColor=shadowColor; ctx.shadowBlur=8; if(dash.length) ctx.setLineDash(dash);
+    const r=10; ctx.beginPath(); ctx.moveTo(sx+r,sy); ctx.arcTo(sx+sw,sy,sx+sw,sy+sh,r); ctx.arcTo(sx+sw,sy+sh,sx,sy+sh,r); ctx.arcTo(sx,sy+sh,sx,sy,r); ctx.arcTo(sx,sy,sx+sw,sy,r); ctx.closePath(); ctx.stroke(); ctx.shadowBlur=0;
+    let label= d.id!==undefined ? `#${d.id} ${Math.round(d.score*100)}%` : `#${idx+1} ${Math.round(d.score*100)}%`;
+    if(separateShirts){ if(isVerifying) label+=' ⏳'; else if(isBlack) label+=' ⬛ preta'; else if(isWhite) label+=' ⬜ branca'; else label+=' outra'; }
+    ctx.fillStyle=baseColor;
+    const tw=ctx.measureText(label).width+16;
+    ctx.fillRect(sx, sy-20, tw, 18); ctx.setLineDash([]);
+    if(isWhite){ ctx.fillStyle='#0f172a'; } else if(isBlack){ ctx.fillStyle='white'; } else { ctx.fillStyle=isVerifying?'#0f172a':'#052e16'; } ctx.font='700 11px Inter'; ctx.fillText(label, sx+6, sy-7);
+    // ID grande no centro
+    if(d.id && d.id!=='?'){
+      ctx.fillStyle='rgba(0,0,0,0.45)'; ctx.fillRect(sx+sw/2-14, sy+sh/2-10, 28, 20);
+      ctx.fillStyle='white'; ctx.font='800 12px JetBrains Mono'; ctx.textAlign='center'; ctx.fillText(String(d.id), sx+sw/2, sy+sh/2+4); ctx.textAlign='left';
+    }
+    ctx.restore();
+  });
+  // indicador IDs ativos
+  if(tracks.length>0){
+    ctx.fillStyle='rgba(2,6,23,0.75)'; ctx.fillRect(6,6,140,18);
+    ctx.fillStyle='#86efac'; ctx.font='600 11px Inter'; ctx.fillText(`IDs ativos: ${tracks.map(t=>t.id).join(', ')}`,10,18);
+  }
+}
+
+// Reset/export/photo
+resetBtn.addEventListener('click',()=>{if(total===0&&history.length===0){showToast('Nada para zerar','ℹ️');return;} if(confirm('Zerar contador e histórico?')){total=0;peak=0;totalBlack=0;totalWhite=0;history=[];tracks=[];nextId=1;totalCountEl.textContent=0;peakCountEl.textContent=0;save();renderLog();renderStats();showToast('Zerado','🧹');}});
+document.getElementById('clearLog').addEventListener('click',()=>{history=[];save();renderLog();renderStats();showToast('Histórico limpo','🗑️');});
+csvBtn.addEventListener('click',()=>{if(history.length===0){showToast('Nenhum dado','ℹ️');return;}const h='data,hora,quantidade,ids,iso\n',rows=history.map(x=>`${x.date},${x.time},${x.count},"${(x.label.match(/IDs? (.+)/)?.[1]||'')}",${x.iso}`).join('\n');const b=new Blob([h+rows],{type:'text/csv;charset=utf-8;'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=`facecounter-v2-${new Date().toISOString().slice(0,10)}.csv`;a.click();URL.revokeObjectURL(u);showToast('CSV baixado','⬇️');});
+shotBtn.addEventListener('click',()=>{if(!running){showToast('Ligue a câmera','ℹ️');return;}const tmp=document.createElement('canvas');tmp.width=stage.clientWidth;tmp.height=stage.clientHeight;const tc=tmp.getContext('2d');tc.drawImage(video,0,0,tmp.width,tmp.height);tc.drawImage(canvas,0,0,tmp.width,tmp.height);const u=tmp.toDataURL('image/png'),a=document.createElement('a');a.href=u;a.download=`facecounter-v2-${Date.now()}.png`;a.click();showToast('Foto salva','📸');});
+let deferredPrompt=null;const installBtn=document.getElementById('installBtn');window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;installBtn.style.display='inline-flex';});installBtn.addEventListener('click',async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;installBtn.style.display='none';});
+video.classList.toggle('no-mirror',!mirrored);
+</script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4d899810a25de1e',t:'MTc5MjUwNTM1OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4f13c2caacee6c8',t:'MTc5Mjc2MzY4MA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
